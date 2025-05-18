@@ -1,0 +1,3 @@
+[submodule "webui"]
+    path = webui
+    url = https://github.com/ZeroBall526/conbot-server-webui.git
