@@ -1,29 +1,31 @@
 package com.zeroball0526.route
 
 import com.zeroball0526.Token
+import com.zeroball0526.customLogger
 import com.zeroball0526.imageDbRoute
 import com.zeroball0526.imageIndexer
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.plugins.origin
 import io.ktor.server.request.receive
+import io.ktor.server.request.uri
 import io.ktor.server.response.respond
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.routing
 import java.io.File
-import kotlin.text.isNullOrEmpty
 
 fun Application.configureDeleteRouting(){
     routing {
         delete("/deleteCons") {
             val token = call.request.headers["token"]
             val form = call.receive<DeleteConForm>()
-            println("요청된 ip: ${call.request.origin.remoteAddress}")
+            customLogger.info("접근 - 콘 삭제 접근 요청, 요청된 ip: ${call.request.origin.remoteAddress}")
 
-            if (token.isNullOrEmpty() || token != Token().getToken(imageDbRoute)) {
-                println(form.conName)
+            if(Token().isValidToken(token ?:"",imageDbRoute)) {
+                customLogger.warn("${call.request.uri} 인증 거부 - 사유: 잘못된 토큰, 요청된 ip: ${call.request.origin.remoteAddress}")
                 return@delete call.respond(
-                    HttpStatusCode.Forbidden, mapOf(
+                    HttpStatusCode.Forbidden,
+                    mapOf(
                         "code" to HttpStatusCode.Forbidden.value,
                         "message" to "토큰 값이 올바르지 않아요!"
                     )
@@ -51,6 +53,7 @@ fun Application.configureDeleteRouting(){
                 }
                 imageIndexer(imageDbRoute)
             } catch (e: Error) {
+                customLogger.warn("${call.request.uri} - 데이터베이스 작업 중 오류가 발생했습니다!")
                 e.printStackTrace()
                 return@delete call.respond(
                     HttpStatusCode.InternalServerError, mapOf(
@@ -77,13 +80,18 @@ fun Application.configureDeleteRouting(){
         delete("/deleteCategory") {
             val token = call.request.headers["token"]
             //토큰 권한 필요한 명령 api 접근자 ip 확인
-            println("요청된 ip: ${call.request.origin.remoteAddress}")
+            customLogger.info("접근 - 카테고리 삭제 접근 요청, 요청된 ip: ${call.request.origin.remoteAddress}")
 
-            if (token.isNullOrEmpty() || token != Token().getToken(imageDbRoute))
-                return@delete call.respond( HttpStatusCode.Forbidden, mapOf(
-                    "code" to HttpStatusCode.Forbidden.value,
-                    "message" to "토큰 값이 올바르지 않아요!"
-                ))
+            if(Token().isValidToken(token ?:"",imageDbRoute)) {
+                customLogger.warn("${call.request.uri} 인증 거부 - 사유: 잘못된 토큰, 요청된 ip: ${call.request.origin.remoteAddress}")
+                return@delete call.respond(
+                    HttpStatusCode.Forbidden,
+                    mapOf(
+                        "code" to HttpStatusCode.Forbidden.value,
+                        "message" to "토큰 값이 올바르지 않아요!"
+                    )
+                )
+            }
 
             try {
                 val categoryName = call.receive<CategoryForm>().categoryName
@@ -115,6 +123,7 @@ fun Application.configureDeleteRouting(){
                 )
                 )
             } catch (e: Error) {
+                customLogger.warn("${call.request.uri} - 데이터베이스 작업 중 오류가 발생했습니다!")
                 e.printStackTrace()
                 return@delete call.respond( HttpStatusCode.InternalServerError, mapOf(
                     "code" to HttpStatusCode.InternalServerError.value,

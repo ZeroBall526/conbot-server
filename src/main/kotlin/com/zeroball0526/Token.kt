@@ -1,5 +1,6 @@
 package com.zeroball0526
 
+import com.zeroball0526.properties.PropertiesStore
 import java.io.BufferedReader
 import java.io.FileReader
 import java.io.File
@@ -33,7 +34,7 @@ class Token{
             result = if(isUpperCase) sb.toString() else sb.toString().lowercase()
             File("${route}\\SECURITY").writeText(result)
         }catch (e : Error){
-            println("토큰을 생성하는 도중 오류가 발생했습니다!")
+            customLogger.error("Token - 토큰을 생성하는 도중 오류가 발생했습니다!")
             e.printStackTrace()
             return false.toString()
         }
@@ -77,4 +78,20 @@ class Token{
         val result = BufferedReader(FileReader(securityFile, Charsets.UTF_8)).readLines()[0]
         return result
     }
+
+    /**
+     * 입력받은 토큰이 유효한지 검증합니다.
+     * @param inputToken 검증할 토큰 값
+     * @param tokenRoute 토큰 저장 위치
+     * @return boolean
+     */
+    fun isValidToken(inputToken : String,tokenRoute : String): Boolean {
+        val propVal = PropertiesStore.getProperty("useToken").toBoolean()
+        if(propVal == false) {
+            customLogger.info("Token - 경고! 토큰기능이 비활성화 되어 있어요! 이것이 무슨 위험인지 잘 아실거라 믿어요.")
+            customLogger.info("Token - 디버깅이 아니다면 토큰 기능 활성화를 권장합니다. 자세한 설정은 setting.properties 파일을 확인해주세요.")
+        }
+        return !((inputToken.isNotEmpty() && inputToken == getToken(tokenRoute)) || !propVal)
+    }
+
 }

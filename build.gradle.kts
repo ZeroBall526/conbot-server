@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.zeroball0526"
-version = "1.0.0"
+version = "1.1.0"
 
 val pageDir = "webui"
 

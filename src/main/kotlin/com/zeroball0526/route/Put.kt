@@ -1,6 +1,7 @@
 package com.zeroball0526.route
 
 import com.zeroball0526.Token
+import com.zeroball0526.customLogger
 import com.zeroball0526.imageDbRoute
 import com.zeroball0526.imageIndexer
 import io.ktor.http.HttpStatusCode
@@ -8,12 +9,10 @@ import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
 import io.ktor.http.content.streamProvider
 import io.ktor.server.application.Application
-import io.ktor.server.http.content.resource
-import io.ktor.server.http.content.static
-import io.ktor.server.http.content.staticResources
 import io.ktor.server.plugins.origin
 import io.ktor.server.request.receive
 import io.ktor.server.request.receiveMultipart
+import io.ktor.server.request.uri
 import io.ktor.server.response.respond
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
@@ -22,7 +21,6 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
-import kotlin.text.isNullOrEmpty
 
 fun Application.configurePutRouting(){
     routing{
@@ -31,9 +29,10 @@ fun Application.configurePutRouting(){
             put{
                 val token = call.request.headers["token"]
                 //토큰 권한 필요한 명령 api 접근자 ip 확인
-                println("카테고리 접근 요청, 요청된 ip: ${call.request.origin.remoteAddress}")
+                customLogger.info("접근 - 카테고리 추가 접근 요청, 요청된 ip: ${call.request.origin.remoteAddress}")
 
-                if(token.isNullOrEmpty() || token != Token().getToken(imageDbRoute))
+                if(Token().isValidToken(token ?:"",imageDbRoute)) {
+                    customLogger.warn("${call.request.uri} 인증 거부 - 사유: 잘못된 토큰, 요청된 ip: ${call.request.origin.remoteAddress}")
                     return@put call.respond(
                         HttpStatusCode.Forbidden,
                         mapOf(
@@ -41,6 +40,7 @@ fun Application.configurePutRouting(){
                             "message" to "토큰 값이 올바르지 않아요!"
                         )
                     )
+                }
                 try{
                     val categoryName = call.receive<CategoryForm>().categoryName
                     if(File("${imageDbRoute}\\${categoryName}").exists())
@@ -60,6 +60,7 @@ fun Application.configurePutRouting(){
                         )
                     )
                 }catch (e : Error){
+                    customLogger.warn("${call.request.uri} - 데이터베이스 작업 중 오류가 발생했습니다!")
                     e.printStackTrace()
                     return@put call.respond(HttpStatusCode.InternalServerError,
                         mapOf(
@@ -76,15 +77,18 @@ fun Application.configurePutRouting(){
         put("addCons"){
             val token = call.request.headers["token"]
             //토큰 권한 필요한 명령 api 접근자 ip 확인
-            println("콘 접근 요청, 요청된 ip: ${call.request.origin.remoteAddress}")
+            customLogger.info("접근 - 콘 추가 접근 요청, 요청된 ip: ${call.request.origin.remoteAddress}")
 
-            if(token.isNullOrEmpty() || token != Token().getToken(imageDbRoute))
-                return@put call.respond( HttpStatusCode.Forbidden, mapOf(
-                    "code" to HttpStatusCode.Forbidden.value,
-                    "message" to "토큰 값이 올바르지 않아요!"
+            if(Token().isValidToken(token ?:"",imageDbRoute)) {
+                customLogger.warn("${call.request.uri} 인증 거부 - 사유: 잘못된 토큰, 요청된 ip: ${call.request.origin.remoteAddress}")
+                return@put call.respond(
+                    HttpStatusCode.Forbidden,
+                    mapOf(
+                        "code" to HttpStatusCode.Forbidden.value,
+                        "message" to "토큰 값이 올바르지 않아요!"
+                    )
                 )
-                )
-
+            }
             try{
                 //action
                 val errorData = ArrayList<String>()
@@ -97,7 +101,7 @@ fun Application.configurePutRouting(){
                         is PartData.FormItem -> {
                             if(part.name == "category") categoryName = part.value
                             else {
-                                println("ERROR: 올바른 폼의 형식이 아닙니다!")
+                                customLogger.info("콘 추가 - ERROR: 올바른 폼의 형식이 아닙니다! ")
                                 isBadForm = true
                             }
                         }
@@ -135,6 +139,7 @@ fun Application.configurePutRouting(){
                     "message" to "업데이트를 완료했어요."
                 ))
             }catch (e : Error){
+                customLogger.warn("${call.request.uri} - 데이터베이스 작업 중 오류가 발생했습니다!")
                 e.printStackTrace()
                 return@put call.respond(HttpStatusCode.InternalServerError, mapOf(
                     "code" to HttpStatusCode.InternalServerError.value,

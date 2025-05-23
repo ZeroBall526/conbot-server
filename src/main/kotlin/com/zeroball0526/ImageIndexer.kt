@@ -4,11 +4,12 @@ import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.zeroball0526.properties.PropertiesStore
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
 
-val imageDbRoute = "${System.getProperty("user.dir")}\\conbot-image"
+val imageDbRoute : String = PropertiesStore.getProperty("db.route") ?:""
 
 private class jsonTemplete{
     var name : String? = null
@@ -17,7 +18,6 @@ private class jsonTemplete{
 }
 
 fun imageIndexer(route : String){
-    //TODO : 이미지 인덱싱 구현
     val path = File(route)
     val listFolder = path.listFiles()
 
@@ -62,9 +62,9 @@ fun imageIndexer(route : String){
     try{
         File("${route}\\index.json").writeText(indexJson.toString())
         File("${route}\\category").writeText(categoryJson.toString())
-        println("인덱싱 완료")
+        customLogger.info("이미지인덱싱 - 인덱싱 완료")
     }catch (e: Error){
-        println("콘 정보를 인덱싱 중 문제가 발생했어요!")
+        customLogger.error("이미지인덱싱 - 콘 정보를 인덱싱 중 문제가 발생했어요!")
         e.printStackTrace()
     }
 }
@@ -78,7 +78,7 @@ fun categoryCon(dbRoute : String,category: String): String?{
 
         return category.toString()
     }catch (e: NullPointerException){
-        println("$category 카테고리 검색 실패!")
+        customLogger.error("이미지인덱싱 - $category 카테고리 검색 실패!")
         return null
     }
 }
