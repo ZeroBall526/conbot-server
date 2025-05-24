@@ -1,5 +1,6 @@
 package com.zeroball0526.properties
 
+import com.zeroball0526.customLogger
 import java.io.File
 import java.io.FileInputStream
 import java.util.Properties
@@ -27,9 +28,9 @@ object PropertiesStore{
 
     private fun createSetting(){
         // 새 설정 파일 제작
-        println("새 설정 파일 생성중...")
+        customLogger.info("Setting - 새 설정 파일 생성중...")
         CreateProperties(defaultSetting(),filePath).addComment("콘봇-서버 설정 파일입니다! 잘 모르겠다면 절대 건드지마세요!")
-        println("새 설정 파일 작성 완료!")
+        customLogger.info("Setting - 새 설정 파일 작성 완료!")
     }
 
     fun addOption (opt:Map <String,Any>){

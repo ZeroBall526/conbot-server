@@ -11,10 +11,12 @@ import ch.qos.logback.classic.Logger
 import java.io.File
 import kotlin.system.exitProcess
 
-private val dbRoute = imageDbRoute
 val customLogger = LoggerFactory.getLogger(Application::class.java)
 
 fun main(args: Array<String>) {
+    PropertiesStore
+    val dbRoute = imageDbRoute
+
     if(dbRoute.isNullOrEmpty()) throw IllegalArgumentException("DB 경로가 올바르지 않아요! setting.properties 를 다시 점검해주세요!")
     val db = File(dbRoute)
 
