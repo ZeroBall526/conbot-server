@@ -3,7 +3,7 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
-src/main/resource/static/*
+src/main/resource/static/*c
 !src/main/package/resources/static/.gitkeep
 src/test/kotlin/com/zeroball0526/*
 setting.properties
